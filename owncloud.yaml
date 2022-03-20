@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owncloud
+  namespace: my-cloud
+  labels:
+    app: owncloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: owncloud
+  template:
+    metadata:
+      labels:
+        app: owncloud
+    spec:
+      containers:
+      - name: owncloud
+        image: owncloud
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: owncloud-storage
+          mountPath: /var/www/html/data
+          subPath: owncloud/data
+        volumeMounts:
+        - name: owncloud-storage
+          mountPath: /var/www/html/apps
+          subPath: owncloud/apps
+        volumeMounts:
+        - name: owncloud-storage
+          mountPath: /var/www/html/config
+          subPath: owncloud/config
+      volumes:
+      - name: owncloud-storage
+        persistentVolumeClaim:
+          claimName: pvc-owncloud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: owncloud
+  namespace: my-cloud
+spec:
+  selector:
+    app: owncloud
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: my-cloud
+  labels:
+    app: mariadb
+spec:
+  serviceName: 'mariadb'
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb
+        imagePullPolicy: Always  
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: maria-secret
+              key: maria-username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maria-secret
+              key: maria-password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: database-cfg
+              key: database-name
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maria-secret
+              key: maria-root-password
+        - name: MARIADB_MAX_ALLOWED_PACKET
+          valueFrom:
+            configMapKeyRef:
+              name: database-cfg
+              key: max-allowed-packet
+        - name: MARIADB_INNODB_LOG_FILE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: database-cfg
+              key: log-file-size
+        - name: MARIADB_INNODB_BUFFER_POOL_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: database-cfg
+              key: buffer-pool-size
+        - name: MARIADB_INNODB_FILE_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: database-cfg
+              key: file-format
+        ports:
+        - name: mysql
+          containerPort: 3306
+        volumeMounts:
+        - name: storage
+          mountPath: /var/lib/mysql
+          subPath: mysql
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: pvc-owncloud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP

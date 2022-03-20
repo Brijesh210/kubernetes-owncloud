@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+        name: database-cfg
+        namespace: my-cloud
+data:
+        database-name: 'ownclouddb'
+        max-allowed-packet: '128M'
+        log-file-size: '64M'
+        buffer-pool-size: '64M'
+        file-format: 'Barracuda'
